@@ -2,6 +2,7 @@
 Tentang Proyek Ini
 Sistem Manajemen Perpustakaan ini adalah aplikasi berbasis web yang dirancang untuk mempermudah administrasi perpustakaan dan memberikan pengalaman peminjaman buku yang mandiri bagi anggota. Dibangun dengan fokus pada efisiensi alur kerja antara Admin dan User.
 
+
 Fitur Unggulan
 🛡️ Panel Administrasi (Control Center)
 Manajemen penuh untuk operasional perpustakaan sehari-hari:
@@ -13,6 +14,8 @@ Katalog Buku: Manajemen stok, kategori, dan detail buku secara mendalam.
 Sistem Approval: Fitur verifikasi permintaan pinjam dari user (Setuju/Tolak).
 
 Transaksi & Denda: Rekap otomatis peminjaman, pengembalian, serta kalkulasi denda keterlambatan secara real-time.
+
+
 
 👤 Panel Pengguna (Member Area)
 Memberikan kenyamanan bagi pembaca:
