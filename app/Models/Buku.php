@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Buku extends Model
 {
@@ -48,5 +49,30 @@ class Buku extends Model
     public function scopeTersedia($query)
     {
         return $query->where('stok', '>', 0);
+    }
+
+    public function coverUrl(string $size = 'M'): ?string
+    {
+        if (!$this->cover) {
+            return null;
+        }
+
+        if (str_starts_with($this->cover, 'http')) {
+            return $this->optimizedExternalCoverUrl($this->cover, $size);
+        }
+
+        return Storage::url($this->cover);
+    }
+
+    private function optimizedExternalCoverUrl(string $url, string $size): string
+    {
+        $size = in_array($size, ['S', 'M', 'L'], true) ? $size : 'M';
+        $url = preg_replace('/^http:\/\//i', 'https://', $url);
+
+        if (str_contains($url, 'covers.openlibrary.org')) {
+            return preg_replace('/-(S|M|L)\.jpg(\?.*)?$/i', '-' . $size . '.jpg$2', $url) ?: $url;
+        }
+
+        return $url;
     }
 }

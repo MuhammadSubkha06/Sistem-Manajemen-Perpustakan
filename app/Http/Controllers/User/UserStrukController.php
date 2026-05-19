@@ -19,6 +19,7 @@ class UserStrukController extends Controller
         }
 
         $struks = $anggota->struks()
+            ->approved()
             ->with('peminjaman.buku')
             ->latest('issued_at')
             ->paginate(10);
@@ -30,7 +31,7 @@ class UserStrukController extends Controller
     {
         $anggota = auth()->user()->anggota;
 
-        abort_if(!$anggota || $struk->anggota_id !== $anggota->id, 403);
+        abort_if(!$anggota || $struk->anggota_id !== $anggota->id || !$struk->is_approved, 403);
 
         $struk->load(['anggota', 'peminjaman.buku']);
 

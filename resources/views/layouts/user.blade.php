@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Portal') - Perpustakaan 40</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo40.png') }}">
+    <link rel="preconnect" href="https://covers.openlibrary.org" crossorigin>
+    <link rel="dns-prefetch" href="//covers.openlibrary.org">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
@@ -100,11 +102,57 @@
             background: #f8d7da;
             color: #58151c;
         }
+
+        .page-loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(246, 247, 251, .94);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+
+        .page-loading-screen.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .loading-panel {
+            width: min(320px, calc(100vw - 2rem));
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, .12);
+            text-align: center;
+        }
+
+        .loading-logo {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
     </style>
     @stack('styles')
 </head>
 
 <body>
+    <div id="pageLoadingScreen" class="page-loading-screen" aria-hidden="true">
+        <div class="loading-panel">
+            <img src="{{ asset('images/logo40.png') }}" alt="Logo Perpustakaan 40" class="loading-logo mb-3">
+            <div class="fw-bold mb-1">Memuat halaman</div>
+            <div class="text-muted small mb-3">Menyiapkan data dan cover buku...</div>
+            <div class="progress" role="progressbar" aria-label="Loading" style="height: 6px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
     <nav class="navbar navbar-expand-lg bg-white sticky-top">
         <div class="container-fluid px-3 px-lg-4">
             <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ route('user.dashboard') }}">
@@ -183,6 +231,50 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const loader = document.getElementById('pageLoadingScreen');
+            if (!loader) {
+                return;
+            }
+
+            let showTimer = window.setTimeout(() => loader.classList.add('show'), 650);
+
+            function hideLoader() {
+                window.clearTimeout(showTimer);
+                loader.classList.remove('show');
+            }
+
+            function showLoader() {
+                window.clearTimeout(showTimer);
+                loader.classList.add('show');
+            }
+
+            window.addEventListener('load', hideLoader);
+            window.addEventListener('pageshow', hideLoader);
+
+            document.addEventListener('submit', function () {
+                showLoader();
+            });
+
+            document.addEventListener('click', function (event) {
+                const link = event.target.closest('a[href]');
+                if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                }
+
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || link.target === '_blank' || link.hasAttribute('download')) {
+                    return;
+                }
+
+                const url = new URL(link.href, window.location.href);
+                if (url.origin === window.location.origin && url.href !== window.location.href) {
+                    showLoader();
+                }
+            });
+        })();
+    </script>
     @stack('scripts')
 </body>
 

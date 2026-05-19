@@ -31,6 +31,10 @@
         gap: .75rem; color: #9ca3af;
         background: linear-gradient(135deg, #fef3c7, #fffbeb);
     }
+    .cover-fallback {
+        position: absolute;
+        inset: 0;
+    }
 
     /* Meta grid */
     .meta-box {
@@ -79,11 +83,17 @@
     <div class="col-5 col-md-4 col-lg-3">
         <div class="cover-portrait">
             @if($book->cover)
-                @if(str_starts_with($book->cover, 'http'))
-                    <img src="{{ $book->cover }}" alt="{{ $book->judul }}">
-                @else
-                    <img src="{{ Storage::url($book->cover) }}" alt="{{ $book->judul }}">
-                @endif
+                <img
+                    src="{{ $book->coverUrl('L') }}"
+                    alt="{{ $book->judul }}"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                    onerror="this.classList.add('d-none'); this.nextElementSibling?.classList.remove('d-none');"
+                >
+                <div class="cover-none cover-fallback d-none">
+                    <i class="fas fa-book-open fa-3x text-warning"></i>
+                    <small class="text-muted">Tidak ada cover</small>
+                </div>
             @else
                 <div class="cover-none">
                     <i class="fas fa-book-open fa-3x text-warning"></i>

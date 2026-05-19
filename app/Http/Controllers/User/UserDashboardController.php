@@ -4,13 +4,20 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Buku;
+use App\Services\LibraryTransactionService;
 use Illuminate\Http\Request;
 
 class UserDashboardController extends Controller
 {
+    public function __construct(private LibraryTransactionService $library)
+    {
+    }
+
     // Menampilkan dashboard anggota beserta ringkasan pinjaman.
     public function index()
     {
+        $this->library->refreshOverdueLoans();
+
         $anggota = auth()->user()->anggota;
 
         $stats = [
@@ -22,9 +29,14 @@ class UserDashboardController extends Controller
         ];
 
         $riwayat = collect();
+        $strukTerbaru = collect();
         $katalogBuku = Buku::with('kategoris')
             ->latest()
             ->limit(8)
+            ->get();
+        $bukuTerpopuler = Buku::withCount('peminjaman')
+            ->orderByDesc('peminjaman_count')
+            ->limit(5)
             ->get();
 
         if ($anggota) {
@@ -39,9 +51,16 @@ class UserDashboardController extends Controller
                 ->latest()
                 ->limit(5)
                 ->get();
+
+            $strukTerbaru = $anggota->struks()
+                ->approved()
+                ->with('peminjaman.buku')
+                ->latest('issued_at')
+                ->limit(3)
+                ->get();
         }
 
-        return view('user.dashboard.index', compact('stats', 'riwayat', 'anggota', 'katalogBuku'));
+        return view('user.dashboard.index', compact('stats', 'riwayat', 'anggota', 'katalogBuku', 'strukTerbaru', 'bukuTerpopuler'));
     }
 
     // Menampilkan profil anggota.

@@ -36,9 +36,8 @@
                 <label class="form-label small text-muted mb-1">Tanggal Sampai</label>
                 <input type="date" name="tgl_sampai" class="form-control form-control-sm" value="{{ request('tgl_sampai') }}">
             </div>
-            <div class="col-md-3 d-flex gap-2">
-                <button class="btn btn-primary btn-sm flex-grow-1">Filter</button>
-                <a href="{{ route('admin.peminjaman.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+            <div class="col-md-3">
+                <a href="{{ route('admin.peminjaman.index') }}" class="btn btn-outline-secondary btn-sm w-100">Reset</a>
             </div>
         </form>
     </div>
@@ -149,5 +148,24 @@
         <div class="card-footer bg-white py-3 px-4">{{ $peminjaman->links() }}</div>
     @endif
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('form[method="GET"]');
+        if (filterForm) {
+            const inputs = filterForm.querySelectorAll('select, input');
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    // Delay submission slightly to ensure value is set
+                    setTimeout(() => {
+                        filterForm.submit();
+                    }, 100);
+                });
+            });
+        }
+    });
+</script>
+@endpush
 
 @endsection

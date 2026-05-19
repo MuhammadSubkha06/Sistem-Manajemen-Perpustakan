@@ -5,14 +5,21 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Buku;
 use App\Models\Peminjaman;
+use App\Services\LibraryTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserPeminjamanController extends Controller
 {
+    public function __construct(private LibraryTransactionService $library)
+    {
+    }
+
     // Menampilkan riwayat peminjaman milik anggota.
     public function index()
     {
+        $this->library->refreshOverdueLoans();
+
         $anggota = auth()->user()->anggota;
 
         if (!$anggota) {
@@ -22,7 +29,7 @@ class UserPeminjamanController extends Controller
         }
 
         $peminjaman = $anggota->peminjaman()
-            ->with(['buku', 'struks'])
+            ->with(['buku', 'struks' => fn ($query) => $query->approved()])
             ->latest()
             ->paginate(10);
 
@@ -51,32 +58,7 @@ class UserPeminjamanController extends Controller
             'tgl_kembali_rencana' => 'required|date|after:today',
         ]);
 
-        $sudahPinjam = Peminjaman::where('anggota_id', $anggota->id)
-            ->where('buku_id', $validated['buku_id'])
-            ->where('status', 'dipinjam')
-            ->whereIn('approval_status', ['pending', 'approved'])
-            ->exists();
-
-        if ($sudahPinjam) {
-            return back()->withErrors(['buku_id' => 'Anda sudah meminjam buku ini dan belum mengembalikannya.'])->withInput();
-        }
-
-        $buku = Buku::findOrFail($validated['buku_id']);
-
-        if ($buku->stok < 1) {
-            return back()->withErrors(['buku_id' => 'Stok buku sudah habis.'])->withInput();
-        }
-
-        Peminjaman::create([
-            'anggota_id'          => $anggota->id,
-            'buku_id'             => $validated['buku_id'],
-            'tgl_pinjam'          => today(),
-            'tgl_kembali_rencana' => $validated['tgl_kembali_rencana'],
-            'status'              => 'dipinjam',
-            'approval_status'     => 'pending',
-            'return_status'       => 'none',
-            'denda'               => 0,
-        ]);
+        $this->library->submitLoanRequest($anggota, $validated);
 
         return redirect()->route('user.peminjaman.index')
             ->with('success', 'Permohonan peminjaman berhasil diajukan dan menunggu persetujuan admin.');
@@ -85,11 +67,13 @@ class UserPeminjamanController extends Controller
     // Menampilkan detail peminjaman milik anggota.
     public function show(Peminjaman $peminjaman)
     {
+        $this->library->refreshOverdueLoans();
+
         $anggota = auth()->user()->anggota;
 
         abort_if(!$anggota || $peminjaman->anggota_id !== $anggota->id, 403);
 
-        $peminjaman->load(['buku', 'struks']);
+        $peminjaman->load(['buku', 'struks' => fn ($query) => $query->approved()]);
 
         return view('user.peminjaman.show', compact('peminjaman'));
     }

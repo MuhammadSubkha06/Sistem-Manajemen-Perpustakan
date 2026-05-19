@@ -29,6 +29,10 @@
         background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
     }
     .cover-placeholder-lg i { font-size: 4rem; }
+    .cover-fallback-lg {
+        position: absolute;
+        inset: 0;
+    }
 
     /* spine effect */
     .cover-card::before {
@@ -172,11 +176,17 @@
         <div class="col-5 col-md-4 col-lg-3">
             <div class="cover-card">
                 @if($book->cover)
-                    @if(str_starts_with($book->cover, 'http'))
-                        <img src="{{ $book->cover }}" alt="{{ $book->judul }}">
-                    @else
-                        <img src="{{ Storage::url($book->cover) }}" alt="{{ $book->judul }}">
-                    @endif
+                    <img
+                        src="{{ $book->coverUrl('L') }}"
+                        alt="{{ $book->judul }}"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                        onerror="this.classList.add('d-none'); this.nextElementSibling?.classList.remove('d-none');"
+                    >
+                    <div class="cover-placeholder-lg cover-fallback-lg d-none">
+                        <i class="fas fa-book-open text-primary"></i>
+                        <small class="text-muted">Tidak ada cover</small>
+                    </div>
                 @else
                     <div class="cover-placeholder-lg">
                         <i class="fas fa-book-open text-primary"></i>

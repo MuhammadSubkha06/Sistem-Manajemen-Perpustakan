@@ -77,7 +77,7 @@
                                 @endif
                             </div>
 
-                            @if($p->approval_status === 'approved' && $p->status === 'dipinjam' && $p->return_status !== 'pending')
+                            @if($p->approval_status === 'approved' && in_array($p->status, ['dipinjam', 'terlambat'], true) && $p->return_status !== 'pending')
                                 <form method="POST" action="{{ route('user.peminjaman.request-return', $p) }}" onsubmit="return confirm('Ajukan pengembalian buku ini?')">
                                     @csrf
                                     <button class="btn btn-outline-primary btn-sm">Ajukan Return</button>

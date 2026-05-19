@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Peminjaman;
-use App\Models\Struk;
-use Carbon\Carbon;
+use App\Services\LibraryTransactionService;
 use Illuminate\Http\Request;
 
 class PengembalianController extends Controller
 {
+    public function __construct(private LibraryTransactionService $library)
+    {
+    }
+
     // Menampilkan daftar permintaan pengembalian.
     public function index()
     {
+        $this->library->refreshOverdueLoans();
+
         $peminjaman = Peminjaman::with(['buku', 'anggota'])
             ->dipinjam()
             ->pendingReturn()
@@ -25,23 +30,7 @@ class PengembalianController extends Controller
     // Memproses pengembalian buku yang disetujui.
     public function proses(Request $request, Peminjaman $peminjaman)
     {
-        if (!$peminjaman->isApprovedLoan() || !$peminjaman->hasPendingReturn()) {
-            return back()->with('error', 'Permintaan pengembalian ini tidak valid atau sudah diproses.');
-        }
-
-        $tglAktual = Carbon::today();
-        $peminjaman->tgl_kembali_aktual = $tglAktual;
-
-        $denda = $peminjaman->hitungDenda();
-        $peminjaman->denda = $denda;
-        $peminjaman->status = 'dikembalikan';
-        $peminjaman->return_status = 'approved';
-        $peminjaman->return_processed_at = now();
-        $peminjaman->return_note = null;
-        $peminjaman->save();
-
-        $peminjaman->buku->increment('stok');
-        Struk::buatUntukPeminjaman($peminjaman->fresh(['anggota', 'buku']), 'pengembalian', 'Bukti Pengembalian Buku', $denda);
+        $denda = $this->library->approveReturn($peminjaman);
 
         $msg = 'Buku berhasil dikembalikan.';
         if ($denda > 0) {

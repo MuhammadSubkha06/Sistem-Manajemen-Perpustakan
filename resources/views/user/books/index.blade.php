@@ -65,6 +65,10 @@
         background: linear-gradient(135deg, #dbeafe, #eff6ff);
     }
     .cover-placeholder span { font-size: .58rem; letter-spacing: .06em; text-transform: uppercase; }
+    .cover-fallback {
+        position: absolute;
+        inset: 0;
+    }
 
     .cover-cat {
         position: absolute; top: 9px; left: 9px; z-index: 2;
@@ -137,9 +141,8 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button class="btn btn-primary btn-sm flex-fill">Cari</button>
-                <a href="{{ route('user.books.index') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+            <div class="col-md-2">
+                <a href="{{ route('user.books.index') }}" class="btn btn-outline-secondary btn-sm w-100">Reset</a>
             </div>
         </form>
     </div>
@@ -152,11 +155,18 @@
 
             <div class="book-cover">
                 @if($book->cover)
-                    @if(str_starts_with($book->cover, 'http'))
-                        <img src="{{ $book->cover }}" alt="{{ $book->judul }}" loading="lazy">
-                    @else
-                        <img src="{{ Storage::url($book->cover) }}" alt="{{ $book->judul }}" loading="lazy">
-                    @endif
+                    <img
+                        src="{{ $book->coverUrl('M') }}"
+                        alt="{{ $book->judul }}"
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                        onerror="this.classList.add('d-none'); this.nextElementSibling?.classList.remove('d-none');"
+                    >
+                    <div class="cover-placeholder cover-fallback d-none">
+                        <i class="fas fa-book-open fa-2x"></i>
+                        <span>No Cover</span>
+                    </div>
                 @else
                     <div class="cover-placeholder">
                         <i class="fas fa-book-open fa-2x"></i>
@@ -192,5 +202,37 @@
         {{ $books->links() }}
     </div>
 @endif
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('form[method="GET"]');
+        if (filterForm) {
+            const searchInput = filterForm.querySelector('input[name="search"]');
+            const categorySelect = filterForm.querySelector('select[name="kategori_id"]');
+            let searchTimeout;
+
+            // Auto-submit when category changes
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function() {
+                    setTimeout(() => {
+                        filterForm.submit();
+                    }, 100);
+                });
+            }
+
+            // Auto-submit search with debounce (after user stops typing for 500ms)
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        filterForm.submit();
+                    }, 500);
+                });
+            }
+        }
+    });
+</script>
+@endpush
 
 @endsection

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\PeminjamanController;
 use App\Http\Controllers\Admin\PengembalianController;
 use App\Http\Controllers\Admin\DendaController;
+use App\Http\Controllers\Admin\StrukController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\User\UserBookController;
 use App\Http\Controllers\User\UserPeminjamanController;
@@ -69,6 +70,11 @@ Route::middleware(['auth', 'role:admin'])
     // Denda
     Route::get('denda', [DendaController::class, 'index'])->name('denda.index');
     Route::post('denda/{peminjaman}/bayar', [DendaController::class, 'bayar'])->name('denda.bayar');
+
+    // Struk
+    Route::get('struk', [StrukController::class, 'index'])->name('struk.index');
+    Route::get('struk/{struk}', [StrukController::class, 'show'])->name('struk.show');
+    Route::post('struk/{struk}/approve', [StrukController::class, 'approve'])->name('struk.approve');
 });
 
 // =========================================================

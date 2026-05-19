@@ -66,6 +66,10 @@
         font-size: .58rem; letter-spacing: .08em;
         text-transform: uppercase; color: #c9a94a;
     }
+    .cover-fallback {
+        position: absolute;
+        inset: 0;
+    }
 
     /* Badges on cover */
     .cover-cat {
@@ -286,11 +290,8 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3 d-flex gap-2">
-                <button class="btn btn-warning btn-sm flex-grow-1 fw-semibold">
-                    <i class="fas fa-search me-1"></i>Cari
-                </button>
-                <a href="{{ route('admin.books.index') }}" class="btn btn-outline-secondary btn-sm px-3">Reset</a>
+            <div class="col-md-3">
+                <a href="{{ route('admin.books.index') }}" class="btn btn-outline-secondary btn-sm w-100">Reset</a>
             </div>
         </form>
     </div>
@@ -303,11 +304,18 @@
 
             <div class="book-cover">
                 @if($book->cover)
-                    @if(str_starts_with($book->cover, 'http'))
-                        <img src="{{ $book->cover }}" alt="{{ $book->judul }}" loading="lazy">
-                    @else
-                        <img src="{{ Storage::url($book->cover) }}" alt="{{ $book->judul }}" loading="lazy">
-                    @endif
+                    <img
+                        src="{{ $book->coverUrl('M') }}"
+                        alt="{{ $book->judul }}"
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                        onerror="this.classList.add('d-none'); this.nextElementSibling?.classList.remove('d-none');"
+                    >
+                    <div class="cover-placeholder cover-fallback d-none">
+                        <i class="fas fa-book-open fa-2x"></i>
+                        <span>No Cover</span>
+                    </div>
                 @else
                     <div class="cover-placeholder">
                         <i class="fas fa-book-open fa-2x"></i>
@@ -436,5 +444,37 @@
         </ul>
     </div>
 @endif
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('form[method="GET"]');
+        if (filterForm) {
+            const searchInput = filterForm.querySelector('input[name="search"]');
+            const categorySelect = filterForm.querySelector('select[name="kategori_id"]');
+            let searchTimeout;
+
+            // Auto-submit when category changes
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function() {
+                    setTimeout(() => {
+                        filterForm.submit();
+                    }, 100);
+                });
+            }
+
+            // Auto-submit search with debounce (after user stops typing for 500ms)
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        filterForm.submit();
+                    }, 500);
+                });
+            }
+        }
+    });
+</script>
+@endpush
 
 @endsection

@@ -81,7 +81,7 @@ class Peminjaman extends Model
     public function isApprovedLoan(): bool
     {
         return $this->approval_status === 'approved'
-            && $this->status === 'dipinjam';
+            && in_array($this->status, ['dipinjam', 'terlambat'], true);
     }
 
     // Mengecek apakah pengembalian masih menunggu persetujuan.
@@ -93,7 +93,7 @@ class Peminjaman extends Model
     // Mengambil peminjaman aktif yang sudah disetujui.
     public function scopeDipinjam($query)
     {
-        return $query->where('status', 'dipinjam')
+        return $query->whereIn('status', ['dipinjam', 'terlambat'])
             ->where('approval_status', 'approved');
     }
 

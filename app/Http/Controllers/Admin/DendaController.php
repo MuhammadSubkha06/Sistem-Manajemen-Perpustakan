@@ -4,13 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Peminjaman;
-use App\Models\Struk;
+use App\Services\LibraryTransactionService;
 
 class DendaController extends Controller
 {
+    public function __construct(private LibraryTransactionService $library)
+    {
+    }
+
     // Menampilkan daftar denda yang pernah tercatat.
     public function index()
     {
+        $this->library->refreshOverdueLoans();
+
         $denda = Peminjaman::with(['buku', 'anggota'])
             ->where('status', 'dikembalikan')
             ->where('denda', '>', 0)
@@ -25,20 +31,7 @@ class DendaController extends Controller
     // Menghapus nominal denda setelah dibayar.
     public function bayar(Peminjaman $peminjaman)
     {
-        $nominal = (int) $peminjaman->denda;
-
-        if ($nominal < 1) {
-            return back()->with('error', 'Denda sudah lunas.');
-        }
-
-        Struk::buatUntukPeminjaman(
-            $peminjaman->load(['anggota', 'buku']),
-            'pembayaran_denda',
-            'Bukti Pembayaran Denda',
-            $nominal
-        );
-
-        $peminjaman->update(['denda' => 0]);
+        $this->library->payFine($peminjaman);
 
         return back()->with('success', 'Denda berhasil dikonfirmasi sebagai lunas.');
     }

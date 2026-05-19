@@ -6,12 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Anggota;
 use App\Models\Buku;
 use App\Models\Peminjaman;
+use App\Services\LibraryTransactionService;
 
 class DashboardController extends Controller
 {
+    public function __construct(private LibraryTransactionService $library)
+    {
+    }
+
     // Menampilkan ringkasan data utama untuk dashboard admin.
     public function index()
     {
+        $this->library->refreshOverdueLoans();
+
         $totalBuku = Buku::count();
         $totalAnggota = Anggota::count();
         $totalDipinjam = Peminjaman::dipinjam()->count();

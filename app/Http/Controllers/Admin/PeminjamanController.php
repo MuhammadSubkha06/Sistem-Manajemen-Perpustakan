@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Anggota;
 use App\Models\Buku;
 use App\Models\Peminjaman;
-use App\Models\Struk;
+use App\Services\LibraryTransactionService;
 use Illuminate\Http\Request;
 
 class PeminjamanController extends Controller
 {
+    public function __construct(private LibraryTransactionService $library)
+    {
+    }
+
     // Mengarahkan filter ke daftar peminjaman.
     public function filter(Request $request)
     {
@@ -20,6 +24,8 @@ class PeminjamanController extends Controller
     // Menampilkan daftar peminjaman sesuai filter.
     public function index(Request $request)
     {
+        $this->library->refreshOverdueLoans();
+
         $query = Peminjaman::with(['buku', 'anggota']);
 
         if ($request->filled('status')) {
@@ -64,33 +70,7 @@ class PeminjamanController extends Controller
             'tgl_kembali_rencana' => 'required|date|after:tgl_pinjam',
         ]);
 
-        $sudahPinjam = Peminjaman::where('anggota_id', $validated['anggota_id'])
-            ->where('buku_id', $validated['buku_id'])
-            ->whereIn('approval_status', ['pending', 'approved'])
-            ->where('status', 'dipinjam')
-            ->exists();
-
-        if ($sudahPinjam) {
-            return back()->withErrors(['buku_id' => 'Anggota ini sudah meminjam buku tersebut dan belum dikembalikan.'])->withInput();
-        }
-
-        $buku = Buku::findOrFail($validated['buku_id']);
-
-        if ($buku->stok < 1) {
-            return back()->withErrors(['buku_id' => 'Stok buku habis.'])->withInput();
-        }
-
-        $buku->decrement('stok');
-
-        $peminjaman = Peminjaman::create(array_merge($validated, [
-            'status' => 'dipinjam',
-            'approval_status' => 'approved',
-            'approved_at' => now(),
-            'return_status' => 'none',
-            'denda' => 0,
-        ]));
-
-        Struk::buatUntukPeminjaman($peminjaman, 'peminjaman', 'Bukti Peminjaman Buku');
+        $this->library->createManualLoan($validated);
 
         return redirect()->route('admin.peminjaman.index')
             ->with('success', 'Peminjaman berhasil dicatat.');
@@ -142,33 +122,7 @@ class PeminjamanController extends Controller
     // Menyetujui permohonan peminjaman.
     public function approve(Peminjaman $peminjaman)
     {
-        if (!$peminjaman->isPendingApproval()) {
-            return back()->with('error', 'Permohonan ini sudah diproses sebelumnya.');
-        }
-
-        if ($peminjaman->buku->stok < 1) {
-            return back()->with('error', 'Stok buku sudah habis. Permohonan tidak bisa disetujui.');
-        }
-
-        $duplicate = Peminjaman::where('anggota_id', $peminjaman->anggota_id)
-            ->where('buku_id', $peminjaman->buku_id)
-            ->where('id', '!=', $peminjaman->id)
-            ->where('approval_status', 'approved')
-            ->where('status', 'dipinjam')
-            ->exists();
-
-        if ($duplicate) {
-            return back()->with('error', 'Anggota sudah memiliki peminjaman aktif untuk buku ini.');
-        }
-
-        $peminjaman->buku->decrement('stok');
-        $peminjaman->update([
-            'approval_status' => 'approved',
-            'approved_at' => now(),
-            'approval_note' => null,
-        ]);
-
-        Struk::buatUntukPeminjaman($peminjaman->fresh(['anggota', 'buku']), 'peminjaman', 'Bukti Peminjaman Buku');
+        $this->library->approveLoan($peminjaman);
 
         return back()->with('success', 'Permohonan peminjaman berhasil disetujui.');
     }

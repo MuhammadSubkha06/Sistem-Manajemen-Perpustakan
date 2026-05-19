@@ -18,11 +18,16 @@ class Struk extends Model
         'nominal',
         'payload',
         'issued_at',
+        'is_approved',
+        'approved_at',
+        'approved_by',
     ];
 
     protected $casts = [
         'payload' => 'array',
         'issued_at' => 'datetime',
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function anggota()
@@ -33,6 +38,25 @@ class Struk extends Model
     public function peminjaman()
     {
         return $this->belongsTo(Peminjaman::class);
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
+
+    public function approve(?User $admin = null): void
+    {
+        $this->update([
+            'is_approved' => true,
+            'approved_at' => now(),
+            'approved_by' => $admin?->id,
+        ]);
     }
 
     public static function buatUntukPeminjaman(Peminjaman $peminjaman, string $jenis, string $judul, int $nominal = 0): self
@@ -50,6 +74,9 @@ class Struk extends Model
                 'judul' => $judul,
                 'nominal' => $nominal,
                 'issued_at' => now(),
+                'is_approved' => false,
+                'approved_at' => null,
+                'approved_by' => null,
                 'payload' => [
                     'anggota' => [
                         'nis' => $peminjaman->anggota->nis ?? '-',
