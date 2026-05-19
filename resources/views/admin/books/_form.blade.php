@@ -25,7 +25,7 @@
     <div class="col-md-6 mb-3">
         <label class="form-label fw-semibold">Tahun Terbit</label>
         <input type="number" name="tahun_terbit" class="form-control @error('tahun_terbit') is-invalid @enderror"
-            value="{{ old('tahun_terbit', $book->tahun_terbit ?? '') }}" min="1900" max="{{ date('Y') }}">
+            value="{{ old('tahun_terbit', $book->tahun_terbit ?? '') }}" max="{{ date('Y') }}">
         @error('tahun_terbit') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 </div>
