@@ -15,7 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Daftarkan alias middleware untuk role-based access
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'suspended' => \App\Http\Middleware\CheckSuspended::class,
         ]);
+
+        // Append middleware ke auth routes
+        $middleware->appendToGroup('web', \App\Http\Middleware\CheckSuspended::class);
 
     })
     ->withExceptions(function (Exceptions $exceptions) {

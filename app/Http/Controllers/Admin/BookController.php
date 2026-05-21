@@ -31,7 +31,7 @@ class BookController extends Controller
             );
         }
 
-        $books = $query->latest()->paginate(21);
+        $books = $query->latest()->paginate(20);
         
         $kategoriList = Kategori::all();
 

@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\PeminjamanController;
 use App\Http\Controllers\Admin\PengembalianController;
 use App\Http\Controllers\Admin\DendaController;
 use App\Http\Controllers\Admin\StrukController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\MemberSuspensionController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\User\UserBookController;
 use App\Http\Controllers\User\UserPeminjamanController;
@@ -75,6 +77,18 @@ Route::middleware(['auth', 'role:admin'])
     Route::get('struk', [StrukController::class, 'index'])->name('struk.index');
     Route::get('struk/{struk}', [StrukController::class, 'show'])->name('struk.show');
     Route::post('struk/{struk}/approve', [StrukController::class, 'approve'])->name('struk.approve');
+
+    // Report / Laporan
+    Route::get('report', [ReportController::class, 'index'])->name('report.index');
+    Route::get('report/export-pdf', [ReportController::class, 'exportPDF'])->name('report.export-pdf');
+    Route::get('report/export-excel', [ReportController::class, 'exportExcel'])->name('report.export-excel');
+
+    // Member Suspension / Pelanggaran
+    Route::get('violations', [MemberSuspensionController::class, 'violations'])->name('violations.index');
+    Route::get('violations/{anggota}', [MemberSuspensionController::class, 'show'])->name('violations.show');
+    Route::post('violations/{anggota}/suspend', [MemberSuspensionController::class, 'suspend'])->name('violations.suspend');
+    Route::post('violations/{anggota}/unsuspend', [MemberSuspensionController::class, 'unsuspend'])->name('violations.unsuspend');
+    Route::post('violations/{anggota}/add-violation', [MemberSuspensionController::class, 'addViolation'])->name('violations.add');
 });
 
 // =========================================================

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,9 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
         :root {
@@ -18,10 +21,12 @@
             --accent: #FFC107;
             --accent-hover: #e5ac00;
             --sidebar-bg: #1a1d23;
-            --sidebar-hover: rgba(255,255,255,.07);
+            --sidebar-hover: rgba(255, 255, 255, .07);
         }
 
-        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
 
         body {
             background: #f4f6f9;
@@ -37,12 +42,12 @@
             position: sticky;
             top: 0;
             z-index: 1050;
-            transition: transform .28s cubic-bezier(.4,0,.2,1);
+            transition: transform .28s cubic-bezier(.4, 0, .2, 1);
         }
 
         .sidebar-brand {
             padding: 1.1rem 1rem;
-            border-bottom: 1px solid rgba(255,255,255,.08);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
         }
 
         .sidebar-brand .logo-wrap {
@@ -125,13 +130,22 @@
             padding: .5rem .75rem;
         }
 
-        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
-        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .15);
+            border-radius: 2px;
+        }
 
         .sidebar-footer {
             padding: .75rem;
-            border-top: 1px solid rgba(255,255,255,.08);
+            border-top: 1px solid rgba(255, 255, 255, .08);
         }
 
         .sidebar-footer a {
@@ -147,7 +161,7 @@
         }
 
         .sidebar-footer a:hover {
-            background: rgba(239,68,68,.15);
+            background: rgba(239, 68, 68, .15);
             color: #f87171;
         }
 
@@ -165,7 +179,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,.55);
+            background: rgba(0, 0, 0, .55);
             z-index: 1040;
         }
 
@@ -183,7 +197,7 @@
         .stat-card {
             border: none;
             border-radius: 14px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.07);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
         }
 
         .stat-card .icon-box {
@@ -196,9 +210,20 @@
             font-size: 1.2rem;
         }
 
-        .badge-status-dipinjam { background: #fff3cd; color: #856404; }
-        .badge-status-dikembalikan { background: #d1e7dd; color: #0a3622; }
-        .badge-status-terlambat { background: #f8d7da; color: #58151c; }
+        .badge-status-dipinjam {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-status-dikembalikan {
+            background: #d1e7dd;
+            color: #0a3622;
+        }
+
+        .badge-status-terlambat {
+            background: #f8d7da;
+            color: #58151c;
+        }
 
         .page-loading-screen {
             position: fixed;
@@ -236,7 +261,11 @@
         }
 
         @media (max-width: 991.98px) {
-            #mobileTopbar { display: flex; align-items: center; justify-content: space-between; }
+            #mobileTopbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
 
             #mainSidebar {
                 position: fixed !important;
@@ -246,194 +275,236 @@
                 height: 100vh !important;
             }
 
-            #mainSidebar.sidebar-open { transform: translateX(0); }
-            #sidebarOverlay.open { display: block; }
+            #mainSidebar.sidebar-open {
+                transform: translateX(0);
+            }
 
-            .page-wrapper { flex-direction: column; }
-            .main-content { padding: 1rem; }
+            #sidebarOverlay.open {
+                display: block;
+            }
+
+            .page-wrapper {
+                flex-direction: column;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
         }
 
         @media (min-width: 992px) {
-            #mobileTopbar { display: none !important; }
+            #mobileTopbar {
+                display: none !important;
+            }
         }
     </style>
-
+    <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    </div>
     @stack('styles')
 </head>
+
 <body>
 
-<div id="pageLoadingScreen" class="page-loading-screen" aria-hidden="true">
-    <div class="loading-panel">
-        <img src="{{ asset('images/logo40.png') }}" alt="Logo Perpustakaan 40" class="loading-logo mb-3">
-        <div class="fw-bold mb-1">Memuat halaman</div>
-        <div class="text-muted small mb-3">Menyiapkan data dan cover buku...</div>
-        <div class="progress" role="progressbar" aria-label="Loading" style="height: 6px;">
-            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" style="width: 100%"></div>
-        </div>
-    </div>
-</div>
-
-<div id="mobileTopbar">
-    <div class="d-flex align-items-center gap-2">
-        <div class="logo-wrap d-flex align-items-center justify-content-center rounded-2 overflow-hidden flex-shrink-0" style="width:30px;height:30px;background:var(--accent);">
-            <img src="{{ asset('images/logo40.png') }}" alt="Logo Perpustakaan 40" style="width:100%;height:100%;object-fit:cover;">
-        </div>
-        <span class="fw-bold text-white" style="font-size:.9rem;">Perpustakaan 40</span>
-    </div>
-    <button class="btn btn-link text-white p-1" id="sidebarToggle">
-        <i class="fas fa-bars fa-lg"></i>
-    </button>
-</div>
-
-<div id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-<div class="page-wrapper">
-    <aside id="mainSidebar">
-        <div class="sidebar-brand d-none d-lg-flex align-items-center gap-2">
-            <div class="logo-wrap d-flex align-items-center justify-content-center">
-                <img src="{{ asset('images/logo40.png') }}" alt="Logo Perpustakaan 40">
-            </div>
-            <div>
-                <div class="brand-name">Perpustakaan 40</div>
-                <div class="brand-sub">Admin Panel</div>
+    <div id="pageLoadingScreen" class="page-loading-screen" aria-hidden="true">
+        <div class="loading-panel">
+            <img src="{{ asset('images/logo40.png') }}" alt="Logo Perpustakaan 40" class="loading-logo mb-3">
+            <div class="fw-bold mb-1">Memuat halaman</div>
+            <div class="text-muted small mb-3">Menyiapkan data dan cover buku...</div>
+            <div class="progress" role="progressbar" aria-label="Loading" style="height: 6px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" style="width: 100%">
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="d-flex d-lg-none align-items-center justify-content-between px-3 py-3 border-bottom" style="border-color:rgba(255,255,255,.08)!important;">
-            <span class="fw-bold text-white" style="font-size:.85rem;">Menu</span>
-            <button class="btn btn-link text-secondary p-0" onclick="closeSidebar()">
-                <i class="fas fa-xmark fa-lg"></i>
-            </button>
+    <div id="mobileTopbar">
+        <div class="d-flex align-items-center gap-2">
+            <div class="logo-wrap d-flex align-items-center justify-content-center rounded-2 overflow-hidden flex-shrink-0"
+                style="width:30px;height:30px;background:var(--accent);">
+                <img src="{{ asset('images/logo40.png') }}" alt="Logo Perpustakaan 40"
+                    style="width:100%;height:100%;object-fit:cover;">
+            </div>
+            <span class="fw-bold text-white" style="font-size:.9rem;">Perpustakaan 40</span>
         </div>
+        <button class="btn btn-link text-white p-1" id="sidebarToggle">
+            <i class="fas fa-bars fa-lg"></i>
+        </button>
+    </div>
 
-        <div class="sidebar-scroll">
-            <nav class="sidebar-nav">
-                <div class="nav-section-label">Menu Utama</div>
+    <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-                <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-gauge fa-fw"></i> Beranda
-                </a>
+    <div class="page-wrapper">
+        <aside id="mainSidebar">
+            <div class="sidebar-brand d-none d-lg-flex align-items-center gap-2">
+                <div class="logo-wrap d-flex align-items-center justify-content-center">
+                    <img src="{{ asset('images/logo40.png') }}" alt="Logo Perpustakaan 40">
+                </div>
+                <div>
+                    <div class="brand-name">Perpustakaan 40</div>
+                    <div class="brand-sub">Admin Panel</div>
+                </div>
+            </div>
 
-                <a href="{{ route('admin.books.index') }}" class="{{ request()->routeIs('admin.books.*') ? 'active' : '' }}">
-                    <i class="fas fa-book fa-fw"></i> Buku
-                </a>
-
-                <a href="{{ route('admin.categories.index') }}" class="sub-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
-                    <i class="fas fa-tags fa-fw"></i> Kategori
-                </a>
-
-                <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}">
-                    <i class="fas fa-users fa-fw"></i> Anggota
-                </a>
-
-                <div class="nav-section-label">Transaksi</div>
-
-                <a href="{{ route('admin.peminjaman.index') }}" class="{{ request()->routeIs('admin.peminjaman.*') ? 'active' : '' }}">
-                    <i class="fas fa-arrow-right-arrow-left fa-fw"></i> Peminjaman
-                </a>
-
-                <a href="{{ route('admin.pengembalian.index') }}" class="{{ request()->routeIs('admin.pengembalian.*') ? 'active' : '' }}">
-                    <i class="fas fa-rotate-left fa-fw"></i> Pengembalian
-                </a>
-
-                <a href="{{ route('admin.denda.index') }}" class="{{ request()->routeIs('admin.denda.*') ? 'active' : '' }}">
-                    <i class="fas fa-triangle-exclamation fa-fw"></i> Denda
-                </a>
-
-                <a href="{{ route('admin.struk.index') }}" class="{{ request()->routeIs('admin.struk.*') ? 'active' : '' }}">
-                    <i class="fas fa-receipt fa-fw"></i> Struk
-                </a>
-            </nav>
-        </div>
-
-        <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="btn p-0 w-100 text-start" style="background:none;border:none;">
-                    <div class="d-flex align-items-center gap-2 px-1 py-2 rounded-2 text-secondary" style="font-size:.85rem;transition:all .15s;" onmouseover="this.style.color='#f87171';this.style.background='rgba(239,68,68,.1)'" onmouseout="this.style.color='';this.style.background=''">
-                        <i class="fas fa-arrow-right-from-bracket fa-fw"></i> Keluar
-                    </div>
+            <div class="d-flex d-lg-none align-items-center justify-content-between px-3 py-3 border-bottom"
+                style="border-color:rgba(255,255,255,.08)!important;">
+                <span class="fw-bold text-white" style="font-size:.85rem;">Menu</span>
+                <button class="btn btn-link text-secondary p-0" onclick="closeSidebar()">
+                    <i class="fas fa-xmark fa-lg"></i>
                 </button>
-            </form>
-        </div>
-    </aside>
-
-    <main class="main-content">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-3 mb-3" role="alert">
-                <i class="fas fa-circle-check me-2"></i>{{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        @endif
 
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-3" role="alert">
-                <i class="fas fa-circle-xmark me-2"></i>{{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="sidebar-scroll">
+                <nav class="sidebar-nav">
+                    <div class="nav-section-label">Menu Utama</div>
+
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-gauge fa-fw"></i> Dashboard
+                    </a>
+
+                    <a href="{{ route('admin.books.index') }}"
+                        class="{{ request()->routeIs('admin.books.*') ? 'active' : '' }}">
+                        <i class="fas fa-book fa-fw"></i> Buku
+                    </a>
+
+                    <a href="{{ route('admin.categories.index') }}"
+                        class="sub-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
+                        <i class="fas fa-tags fa-fw"></i> Kategori
+                    </a>
+
+                    <a href="{{ route('admin.members.index') }}"
+                        class="{{ request()->routeIs('admin.members.*') ? 'active' : '' }}">
+                        <i class="fas fa-users fa-fw"></i> Anggota
+                    </a>
+
+                    <div class="nav-section-label">Transaksi</div>
+
+                    <a href="{{ route('admin.peminjaman.index') }}"
+                        class="{{ request()->routeIs('admin.peminjaman.*') ? 'active' : '' }}">
+                        <i class="fas fa-arrow-right-arrow-left fa-fw"></i> Peminjaman
+                    </a>
+
+                    <a href="{{ route('admin.pengembalian.index') }}"
+                        class="{{ request()->routeIs('admin.pengembalian.*') ? 'active' : '' }}">
+                        <i class="fas fa-rotate-left fa-fw"></i> Pengembalian
+                    </a>
+
+                    <a href="{{ route('admin.denda.index') }}"
+                        class="{{ request()->routeIs('admin.denda.*') ? 'active' : '' }}">
+                        <i class="fas fa-triangle-exclamation fa-fw"></i> Denda
+                    </a>
+
+                    <a href="{{ route('admin.struk.index') }}"
+                        class="{{ request()->routeIs('admin.struk.*') ? 'active' : '' }}">
+                        <i class="fas fa-receipt fa-fw"></i> Struk
+                    </a>
+
+                    <div class="nav-section-label">Laporan & Monitoring</div>
+
+                    <a href="{{ route('admin.report.index') }}"
+                        class="{{ request()->routeIs('admin.report.*') ? 'active' : '' }}">
+                        <i class="fas fa-chart-column fa-fw"></i> Laporan Bulanan
+                    </a>
+
+                    <a href="{{ route('admin.violations.index') }}"
+                        class="{{ request()->routeIs('admin.violations.*') ? 'active' : '' }}">
+                        <i class="fas fa-warning fa-fw"></i> Pelanggaran
+                    </a>
+                </nav>
             </div>
-        @endif
 
-        @yield('content')
-    </main>
-</div>
+            <div class="sidebar-footer">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn p-0 w-100 text-start" style="background:none;border:none;">
+                        <div class="d-flex align-items-center gap-2 px-1 py-2 rounded-2 text-secondary"
+                            style="font-size:.85rem;transition:all .15s;"
+                            onmouseover="this.style.color='#f87171';this.style.background='rgba(239,68,68,.1)'"
+                            onmouseout="this.style.color='';this.style.background=''">
+                            <i class="fas fa-arrow-right-from-bracket fa-fw"></i> Keluar
+                        </div>
+                    </button>
+                </form>
+            </div>
+        </aside>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    (function () {
-        const loader = document.getElementById('pageLoadingScreen');
-        if (!loader) {
-            return;
-        }
+        <main class="main-content">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show rounded-3 mb-3" role="alert">
+                    <i class="fas fa-circle-check me-2"></i>{{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
 
-        let showTimer = window.setTimeout(() => loader.classList.add('show'), 650);
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-3" role="alert">
+                    <i class="fas fa-circle-xmark me-2"></i>{{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
 
-        function hideLoader() {
-            window.clearTimeout(showTimer);
-            loader.classList.remove('show');
-        }
+            @yield('content')
+        </main>
+    </div>
 
-        function showLoader() {
-            window.clearTimeout(showTimer);
-            loader.classList.add('show');
-        }
-
-        window.addEventListener('load', hideLoader);
-        window.addEventListener('pageshow', hideLoader);
-
-        document.addEventListener('submit', function () {
-            showLoader();
-        });
-
-        document.addEventListener('click', function (event) {
-            const link = event.target.closest('a[href]');
-            if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const loader = document.getElementById('pageLoadingScreen');
+            if (!loader) {
                 return;
             }
 
-            const href = link.getAttribute('href');
-            if (!href || href.startsWith('#') || link.target === '_blank' || link.hasAttribute('download')) {
-                return;
+            let showTimer = window.setTimeout(() => loader.classList.add('show'), 650);
+
+            function hideLoader() {
+                window.clearTimeout(showTimer);
+                loader.classList.remove('show');
             }
 
-            const url = new URL(link.href, window.location.href);
-            if (url.origin === window.location.origin && url.href !== window.location.href) {
+            function showLoader() {
+                window.clearTimeout(showTimer);
+                loader.classList.add('show');
+            }
+
+            window.addEventListener('load', hideLoader);
+            window.addEventListener('pageshow', hideLoader);
+
+            document.addEventListener('submit', function () {
                 showLoader();
-            }
-        });
-    })();
+            });
 
-    function openSidebar() {
-        document.getElementById('mainSidebar').classList.add('sidebar-open');
-        document.getElementById('sidebarOverlay').classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeSidebar() {
-        document.getElementById('mainSidebar').classList.remove('sidebar-open');
-        document.getElementById('sidebarOverlay').classList.remove('open');
-        document.body.style.overflow = '';
-    }
-    document.getElementById('sidebarToggle')?.addEventListener('click', openSidebar);
-</script>
-@stack('scripts')
+            document.addEventListener('click', function (event) {
+                const link = event.target.closest('a[href]');
+                if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                }
+
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || link.target === '_blank' || link.hasAttribute('download')) {
+                    return;
+                }
+
+                const url = new URL(link.href, window.location.href);
+                if (url.origin === window.location.origin && url.href !== window.location.href) {
+                    showLoader();
+                }
+            });
+        })();
+
+        function openSidebar() {
+            document.getElementById('mainSidebar').classList.add('sidebar-open');
+            document.getElementById('sidebarOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            document.getElementById('mainSidebar').classList.remove('sidebar-open');
+            document.getElementById('sidebarOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        document.getElementById('sidebarToggle')?.addEventListener('click', openSidebar);
+    </script>
+    @stack('scripts')
 </body>
+
 </html>

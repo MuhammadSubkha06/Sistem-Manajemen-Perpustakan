@@ -17,6 +17,8 @@ class User extends Authenticatable
         'password',
         'role_id',
         'role',
+        'suspended_at',
+        'suspension_reason',
     ];
 
     protected $hidden = [
@@ -29,6 +31,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -49,5 +52,35 @@ class User extends Authenticatable
     public function anggota()
     {
         return $this->hasOne(Anggota::class);
+    }
+
+    // Mengecek apakah user di-suspend
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
+    }
+
+    // Suspend user dengan alasan
+    public function suspend(string $reason = ''): void
+    {
+        $this->update([
+            'suspended_at' => now(),
+            'suspension_reason' => $reason,
+        ]);
+    }
+
+    // Unsuspend user
+    public function unsuspend(): void
+    {
+        $this->update([
+            'suspended_at' => null,
+            'suspension_reason' => null,
+        ]);
+    }
+
+    // Scope untuk user yang tidak di-suspend
+    public function scopeActive($query)
+    {
+        return $query->whereNull('suspended_at');
     }
 }

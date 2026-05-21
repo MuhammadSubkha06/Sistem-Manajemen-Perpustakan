@@ -109,128 +109,164 @@
 
 <div class="card border-0 rounded-3 shadow-sm mt-4">
     <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center gap-3">
-        <h6 class="fw-bold mb-0">Buku Terpopuler</h6>
+        <h6 class="fw-bold mb-0">
+            <i class="fas fa-fire text-warning me-2"></i>5 Buku Terpopuler
+        </h6>
         <span class="text-muted small">Berdasarkan jumlah peminjaman</span>
     </div>
     <div class="card-body p-4">
-        @php
-            $maxPeminjaman = max(1, (int) $bukuTerpopuler->max('peminjaman_count'));
-        @endphp
-
-        @forelse($bukuTerpopuler as $book)
+        @if($bukuTerpopuler->count() > 0)
             @php
-                $jumlahPinjam = (int) $book->peminjaman_count;
-                $barWidth = $jumlahPinjam > 0 ? max(8, round(($jumlahPinjam / $maxPeminjaman) * 100)) : 0;
-                $ranking = $loop->iteration;
-                $rankingColors = ['text-warning', 'text-secondary', 'text-danger', 'text-primary', 'text-info'];
-                $rankingIcons = ['fa-medal', 'fa-award', 'fa-trophy', 'fa-star', 'fa-bookmark'];
+                $maxPeminjaman = max(1, (int) $bukuTerpopuler->max('peminjaman_count'));
             @endphp
-            <div class="popular-book-row" data-ranking="{{ $ranking }}">
-                <div class="row g-2 align-items-center">
-                    <div class="col-auto" style="width: 40px;">
-                        <div class="popular-book-rank">
-                            <i class="fas {{ $rankingIcons[$ranking - 1] }} {{ $rankingColors[$ranking - 1] }}"></i>
-                            <span class="rank-number">{{ $ranking }}</span>
+
+            <div class="popular-books-container">
+                @foreach($bukuTerpopuler as $book)
+                    @php
+                        $jumlahPinjam = (int) $book->peminjaman_count;
+                        $barWidth = $jumlahPinjam > 0 ? max(10, round(($jumlahPinjam / $maxPeminjaman) * 100)) : 0;
+                        $ranking = $loop->iteration;
+                        $medalIcons = ['fa-medal', 'fa-award', 'fa-trophy', 'fa-star', 'fa-bookmark'];
+                        $medalColors = ['#FFD700', '#C0C0C0', '#CD7F32', '#FFC107', '#FF9800'];
+                    @endphp
+                    <div class="popular-book-item" data-ranking="{{ $ranking }}">
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- Ranking Badge -->
+                            <div class="popular-book-medal" style="color: {{ $medalColors[$ranking - 1] }};">
+                                <i class="fas {{ $medalIcons[$ranking - 1] }}"></i>
+                                <span class="medal-number">{{ $ranking }}</span>
+                            </div>
+
+                            <!-- Book Info -->
+                            <div class="popular-book-info flex-grow-1 min-width-0">
+                                <div class="fw-semibold text-truncate" style="font-size: 0.95rem;">
+                                    {{ $book->judul }}
+                                </div>
+                                <div class="text-muted small text-truncate">
+                                    {{ $book->pengarang ?? '-' }}
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="popular-book-bar-container" style="min-width: 250px;">
+                                <div class="popular-book-bar-track">
+                                    <div class="popular-book-bar-fill" style="width: {{ $barWidth }}%; animation-delay: {{ ($loop->iteration - 1) * 0.1 }}s;">
+                                        <span class="bar-label">{{ $jumlahPinjam }}x</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="fw-semibold text-truncate" style="font-size: 0.95rem;">{{ $book->judul }}</div>
-                        <div class="text-muted small text-truncate">{{ $book->pengarang ?? '-' }}</div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="popular-book-track">
-                            <div class="popular-book-bar" style="width: {{ $barWidth }}%; animation-delay: {{ ($loop->iteration - 1) * 0.1 }}s;"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-1 text-end">
-                        <span class="fw-bold badge bg-light text-dark">{{ number_format($jumlahPinjam) }}x</span>
-                    </div>
-                </div>
+                @endforeach
             </div>
-        @empty
-            <div class="text-center text-muted py-4">Belum ada data peminjaman buku.</div>
-        @endforelse
+        @else
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-book fa-2x mb-3 d-block opacity-50"></i>
+                <p>Belum ada data peminjaman buku.</p>
+            </div>
+        @endif
     </div>
 </div>
 
 @push('styles')
 <style>
-    /* Popular Books Chart Styling */
-    .popular-book-row {
-        padding: 0.75rem 0;
-        transition: all 0.3s ease;
+    /* Popular Books Container */
+    .popular-books-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+
+    /* Individual Book Item */
+    .popular-book-item {
+        padding: 1rem;
+        background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+        border-left: 4px solid #FFC107;
         border-radius: 8px;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
+        transition: all 0.3s ease;
+        animation: slideInLeft 0.5s ease forwards;
+        animation-delay: calc(var(--ranking, 1) * 0.1s);
     }
 
-    .popular-book-row:hover {
-        background: rgba(13, 110, 253, 0.05);
-        transform: translateX(4px);
+    .popular-book-item:hover {
+        background: linear-gradient(135deg, #fff5cc 0%, #ffede0 100%);
+        transform: translateX(8px);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
     }
 
-    .popular-book-row + .popular-book-row {
-        margin-top: 0.5rem;
-    }
-
-    /* Ranking Badge */
-    .popular-book-rank {
+    /* Medal Icon */
+    .popular-book-medal {
         position: relative;
+        width: 50px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #fff9e6 0%, #ffe082 100%);
         border-radius: 50%;
-        color: white;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        animation: scaleIn 0.5s ease;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+        flex-shrink: 0;
     }
 
-    .popular-book-rank i {
-        font-size: 1.1rem;
+    .medal-number {
         position: absolute;
-    }
-
-    .popular-book-rank .rank-number {
-        font-size: 0.7rem;
-        position: absolute;
-        bottom: 2px;
-        right: 2px;
-        background: white;
-        color: #667eea;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Track Container */
-    .popular-book-track {
+        bottom: -8px;
+        right: -8px;
+        width: 24px;
         height: 24px;
-        background: linear-gradient(90deg, #f0f2f5 0%, #e8ecf1 100%);
-        border-radius: 12px;
+        background: #FFC107;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        border: 2px solid white;
+    }
+
+    /* Book Info */
+    .popular-book-info {
+        min-width: 0;
+    }
+
+    /* Progress Bar Container */
+    .popular-book-bar-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Progress Bar Track */
+    .popular-book-bar-track {
+        flex-grow: 1;
+        height: 28px;
+        background: linear-gradient(90deg, #f5f5f5 0%, #eeeeee 100%);
+        border-radius: 14px;
         overflow: hidden;
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
         position: relative;
+        border: 1px solid #e0e0e0;
     }
 
-    /* Animated Bar */
-    .popular-book-bar {
+    /* Progress Bar Fill */
+    .popular-book-bar-fill {
         height: 100%;
-        min-width: 24px;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
-        animation: slideIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        min-width: 28px;
+        background: linear-gradient(90deg, #FFC107 0%, #FFB300 50%, #FFA500 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        animation: fillWidth 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         position: relative;
+        overflow: hidden;
     }
 
-    .popular-book-bar::after {
+    .popular-book-bar-fill::before {
         content: '';
         position: absolute;
         top: 0;
@@ -238,11 +274,20 @@
         bottom: 0;
         right: 0;
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        border-radius: 12px;
         animation: shimmer 2s infinite;
     }
 
-    @keyframes slideIn {
+    .bar-label {
+        position: relative;
+        z-index: 1;
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Animations */
+    @keyframes fillWidth {
         from {
             width: 0;
             opacity: 0;
@@ -253,13 +298,13 @@
         }
     }
 
-    @keyframes scaleIn {
+    @keyframes slideInLeft {
         from {
-            transform: scale(0.8);
+            transform: translateX(-20px);
             opacity: 0;
         }
         to {
-            transform: scale(1);
+            transform: translateX(0);
             opacity: 1;
         }
     }
@@ -273,18 +318,24 @@
         }
     }
 
-    /* Hover Effect for Bar */
-    .popular-book-row:hover .popular-book-bar {
-        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    /* Hover Effect */
+    .popular-book-item:hover .popular-book-bar-fill {
+        box-shadow: 0 4px 16px rgba(255, 193, 7, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.3);
     }
 
-    /* Count Badge */
-    .popular-book-row .badge {
-        font-size: 0.85rem;
-        padding: 0.35rem 0.6rem !important;
-        border-radius: 6px;
-        font-weight: 600;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Responsive */
+    @media (max-width: 768px) {
+        .popular-book-bar-container {
+            min-width: 150px;
+        }
+
+        .popular-book-item {
+            flex-direction: column;
+        }
+
+        .bar-label {
+            font-size: 0.65rem;
+        }
     }
 </style>
 @endpush
