@@ -85,10 +85,12 @@
             </div>
             <div class="p-3">
                 @php
-                    $maxPeminjaman = max(1, (int) $bukuTerpopuler->max('peminjaman_count'));
+                    // Filter hanya buku dengan peminjaman > 0
+                    $bukuTerpopulerFiltered = $bukuTerpopuler->filter(fn($b) => (int)$b->peminjaman_count > 0);
+                    $maxPeminjaman = max(1, (int) $bukuTerpopulerFiltered->max('peminjaman_count') ?? 1);
                 @endphp
 
-                @forelse($bukuTerpopuler as $book)
+                @forelse($bukuTerpopulerFiltered as $book)
                     @php
                         $jumlahPinjam = (int) $book->peminjaman_count;
                         $barWidth = $jumlahPinjam > 0 ? max(8, round(($jumlahPinjam / $maxPeminjaman) * 100)) : 0;

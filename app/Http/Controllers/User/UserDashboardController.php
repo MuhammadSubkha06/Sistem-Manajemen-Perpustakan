@@ -34,9 +34,9 @@ class UserDashboardController extends Controller
             ->latest()
             ->limit(8)
             ->get();
-        $bukuTerpopuler = Buku::withCount('peminjaman')
+        $bukuTerpopuler = Buku::whereHas('peminjaman')
+            ->withCount('peminjaman')
             ->orderByDesc('peminjaman_count')
-            ->limit(5)
             ->get();
 
         if ($anggota) {

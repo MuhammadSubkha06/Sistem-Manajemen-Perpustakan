@@ -41,9 +41,9 @@ class MemberController extends Controller
             'denda_bulan_ini' => Peminjaman::whereMonth('created_at', now()->month)->sum('denda'),
         ];
 
-        $bukuTerpopuler = Buku::withCount('peminjaman')
+        $bukuTerpopuler = Buku::whereHas('peminjaman')
+            ->withCount('peminjaman')
             ->orderByDesc('peminjaman_count')
-            ->limit(5)
             ->get();
 
         $terlambat = Peminjaman::with(['anggota', 'buku'])->terlambat()->get();
